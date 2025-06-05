@@ -607,31 +607,33 @@
             backdrop-filter: blur(8px);
             text-align: center;
             color: #e0e0e0;
+            cursor: pointer; /* Make entire overlay clickable */
         }
 
         #tutorialContent {
             background: #1a1a1a;
-            padding: 40px;
+            padding: 30px;
             border-radius: 20px;
-            max-width: 700px;
+            max-width: 500px; /* Reduced from 700px */
             width: 90%;
             border: 1px solid rgba(102, 126, 234, 0.5);
             box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
             position: relative;
+            cursor: auto; /* Prevent closing when clicking content */
         }
 
         #tutorialContent h2 {
-            font-size: 2.5em;
+            font-size: 2em; /* Reduced from 2.5em */
             background: linear-gradient(135deg, #00ff88, #4ecdc4);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         #tutorialContent p {
-            font-size: 1.2em;
-            margin-bottom: 15px;
-            line-height: 1.5;
+            font-size: 1em; /* Reduced from 1.2em */
+            margin-bottom: 10px;
+            line-height: 1.4;
             color: #ccc;
         }
 
@@ -641,29 +643,40 @@
         }
 
         #tutorialContent .tutorial-step {
-            margin-bottom: 25px;
-            padding: 15px;
+            margin-bottom: 15px; /* Reduced from 25px */
+            padding: 10px; /* Reduced from 15px */
             background: rgba(255, 255, 255, 0.05);
             border-radius: 10px;
             text-align: left;
             transition: background 0.3s ease;
+            font-size: 0.9em; /* Slightly smaller text */
         }
 
         #tutorialContent .tutorial-step strong {
             color: #667eea;
-            font-size: 1.1em;
+            font-size: 1em; /* Reduced from 1.1em */
         }
         
         #tutorialContent button {
-            margin-top: 20px;
+            margin-top: 15px;
             background: linear-gradient(135deg, #00ff88, #00cc70);
-            padding: 15px 30px;
-            border-radius: 15px;
-            font-size: 18px;
+            padding: 12px 25px; /* Reduced from 15px 30px */
+            border-radius: 12px;
+            font-size: 16px;
         }
 
         #tutorialContent button:hover {
             box-shadow: 0 10px 30px rgba(0, 255, 136, 0.4);
+        }
+
+        /* Close hint */
+        .close-hint {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            color: #666;
+            font-size: 0.9em;
+            font-style: italic;
         }
 
         /* Speed Control Styling */
@@ -863,30 +876,24 @@
         </div>
     </div>
 
-    <div id="tutorialOverlay">
-        <div id="tutorialContent">
-            <h2>Welcome to StreamFlow Demo!</h2>
-            <p>This interactive visualization helps you understand <span class="highlight-text">Consistent Hashing</span> and <span class="highlight-text">Elastic Partitioning</span>.</p>
+    <div id="tutorialOverlay" onclick="hideTutorial(event)">
+        <div id="tutorialContent" onclick="event.stopPropagation()">
+            <span class="close-hint">Click anywhere outside to close</span>
+            <h2>Welcome to StreamFlow!</h2>
+            <p>Understand <span class="highlight-text">Consistent Hashing</span> and <span class="highlight-text">Elastic Partitioning</span> through interactive visualization.</p>
             <div class="tutorial-step">
-                <strong>1. The Hash Ring:</strong> This circle represents the entire hash space.
-                <br>Messages are mapped onto this ring using consistent hashing.
+                <strong>Hash Ring:</strong> The circle represents the hash space where messages are mapped.
             </div>
             <div class="tutorial-step">
-                <strong>2. Slots (S0-S15):</strong> These fixed points on the outer ring are logical "slots".
-                <br>Each message is assigned to a specific slot based on its hash value.
+                <strong>Slots (S0-S15):</strong> Fixed points that receive messages based on their hash.
             </div>
             <div class="tutorial-step">
-                <strong>3. Partitions (P1, P2...):</strong> These are your physical nodes/servers.
-                <br>Each partition is responsible for a subset of slots.
+                <strong>Partitions (P1, P2...):</strong> Physical servers managing groups of slots.
             </div>
             <div class="tutorial-step">
-                <strong>4. Elasticity:</strong> You can add or remove partitions without interrupting the system!
-                <br>Slots (and their messages) will be intelligently rebalanced.
+                <strong>Try:</strong> Test Hash, Add/Remove Partitions, and Auto-Scaling Demo!
             </div>
-            <div class="tutorial-step">
-                <strong>5. New Features:</strong> Try the Hash Test to see how messages are routed, and Step Mode to watch operations in detail!
-            </div>
-            <button onclick="hideTutorial()">Got It! Start the Demo</button>
+            <button onclick="hideTutorial(event)">Start Exploring</button>
         </div>
     </div>
 
