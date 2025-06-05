@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StreamFlow - Elastic Partition System with Consistent Hashing & Replication</title>
+    <title>StreamFlow - Elastic Partition System with Consistent Hashing</title>
     <style>
-        /* ... (CSS existant inchangé - pour la brièveté, je ne le répète pas ici) ... */
         * {
             margin: 0;
             padding: 0;
@@ -172,6 +171,7 @@
             background: radial-gradient(circle at center, rgba(102, 126, 234, 0.05) 0%, transparent 70%);
         }
 
+        /* Message Flow Indicator */
         #message-flow-indicator {
             position: absolute;
             left: 50%;
@@ -313,18 +313,11 @@
         .mapping-line {
             position: absolute;
             background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.6), transparent);
-            height: 2px; /* Default for primary */
+            height: 2px;
             transform-origin: left center;
             transition: all 0.5s ease;
             z-index: 5;
         }
-        /* REPLICATION: Style for replica lines */
-        .mapping-line.replica {
-            height: 1px;
-            opacity: 0.5;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent); /* Lighter color for replicas */
-        }
-
 
         .slot-details {
             background: rgba(0, 0, 0, 0.5);
@@ -454,6 +447,7 @@
             font-size: 0.9em;
         }
 
+        /* Hash Test Panel */
         .hash-test-panel {
             background: rgba(102, 126, 234, 0.1);
             border-radius: 15px;
@@ -479,6 +473,7 @@
             margin-top: 10px;
         }
 
+        /* Migration Visualization */
         .migration-info {
             background: rgba(255, 215, 61, 0.1);
             border: 1px solid rgba(255, 215, 61, 0.3);
@@ -498,6 +493,7 @@
             to { opacity: 1; }
         }
 
+        /* Step-by-Step Mode */
         .step-controls {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 10px;
@@ -512,6 +508,7 @@
             font-size: 1.1em;
         }
 
+        /* Stats Chart */
         .stats-chart {
             height: 200px;
             margin-top: 20px;
@@ -566,6 +563,7 @@
             color: #ff6b6b;
         }
 
+        /* Info Tooltip */
         .info-tooltip {
             position: absolute;
             background: rgba(255, 255, 255, 0.95);
@@ -594,6 +592,7 @@
             transform: translate(-50%, 0);
         }
 
+        /* Tutorial Overlay */
         #tutorialOverlay {
             display: none;
             position: fixed;
@@ -667,6 +666,7 @@
             box-shadow: 0 10px 30px rgba(0, 255, 136, 0.4);
         }
 
+        /* Speed Control Styling */
         .speed-control {
             margin-top: 20px;
             display: flex;
@@ -756,12 +756,14 @@
         <header>
             <h1>StreamFlow</h1>
             <p class="subtitle">Elastic Partition System</p>
-            <p class="tech-info">Consistent Hashing • Slot-Based Mapping • Zero-Downtime Scaling • Replication</p> </header>
+            <p class="tech-info">Consistent Hashing • Slot-Based Mapping • Zero-Downtime Scaling</p>
+        </header>
 
         <div class="controls">
             <button id="addPartitionBtn" onclick="addPartition()" class="success">➕ Add Partition</button>
             <button id="removePartitionBtn" onclick="removePartition()" class="danger">➖ Remove Partition</button>
-            <button id="rebalanceBtn" onclick="rebalanceSlotsAndReplicas()">🔄 Rebalance Slots & Replicas</button> <button id="simulateLoadBtn" onclick="simulateLoad()">📊 Auto-Scaling Demo</button>
+            <button id="rebalanceBtn" onclick="rebalanceSlots()">🔄 Rebalance Slots</button>
+            <button id="simulateLoadBtn" onclick="simulateLoad()">📊 Auto-Scaling Demo</button>
             <button onclick="toggleAnimation()">⏯️ Animation</button>
             <button onclick="showSystemInfo()">ℹ️ System Info</button>
             <button onclick="toggleStepMode()" class="warning">🎯 Step Mode</button>
@@ -798,7 +800,8 @@
                         </div>
                         <div class="metric">
                             <span class="metric-label">Replication Factor</span>
-                            <span class="metric-value" id="replication-factor">3</span> </div>
+                            <span class="metric-value" id="replication-factor">3</span>
+                        </div>
                     </div>
                     
                     <div id="migrationInfo" class="migration-info">
@@ -811,7 +814,7 @@
             <div class="panel">
                 <div class="panel-content">
                     <h3 class="panel-title">Partition Distribution</h3>
-                    <div id="partition-distribution"></div> 
+                    <div id="partition-distribution"></div>
                     
                     <div class="slot-grid" id="slot-grid"></div>
                     
@@ -863,19 +866,23 @@
     <div id="tutorialOverlay">
         <div id="tutorialContent">
             <h2>Welcome to StreamFlow Demo!</h2>
-            <p>This interactive visualization helps you understand <span class="highlight-text">Consistent Hashing</span>, <span class="highlight-text">Elastic Partitioning</span>, and <span class="highlight-text">Data Replication</span>.</p> <div class="tutorial-step">
+            <p>This interactive visualization helps you understand <span class="highlight-text">Consistent Hashing</span> and <span class="highlight-text">Elastic Partitioning</span>.</p>
+            <div class="tutorial-step">
                 <strong>1. The Hash Ring:</strong> This circle represents the entire hash space.
                 <br>Messages are mapped onto this ring using consistent hashing.
             </div>
             <div class="tutorial-step">
                 <strong>2. Slots (S0-S15):</strong> These fixed points on the outer ring are logical "slots".
-                <br>Each message is assigned to a specific slot. Slots are replicated for fault tolerance. </div>
+                <br>Each message is assigned to a specific slot based on its hash value.
+            </div>
             <div class="tutorial-step">
                 <strong>3. Partitions (P1, P2...):</strong> These are your physical nodes/servers.
-                <br>Each partition is responsible for a primary copy of some slots and replica copies of others. </div>
+                <br>Each partition is responsible for a subset of slots.
+            </div>
             <div class="tutorial-step">
                 <strong>4. Elasticity:</strong> You can add or remove partitions without interrupting the system!
-                <br>Slots (and their messages/replicas) will be intelligently rebalanced. </div>
+                <br>Slots (and their messages) will be intelligently rebalanced.
+            </div>
             <div class="tutorial-step">
                 <strong>5. New Features:</strong> Try the Hash Test to see how messages are routed, and Step Mode to watch operations in detail!
             </div>
@@ -887,10 +894,9 @@
         // Configuration du système
         const TOTAL_SLOTS = 16;
         const HASH_SPACE = 360;
-        const REPLICATION_FACTOR = 3; // REPLICATION: Defined replication factor
         let partitions = [];
         let slots = [];
-        // let slotToPartitionMap = {}; // REPLICATION: Replaced by slot.primaryPartitionId
+        let slotToPartitionMap = {};
         let animationRunning = true;
         let nextPartitionId = 1;
         let loadSimulationInterval = null;
@@ -900,30 +906,33 @@
         let simulationIntervalDelay = 200;
         let messageAnimationInterval = null;
         
+        // Step mode variables
         let stepMode = false;
         let stepQueue = [];
         let autoPlayInterval = null;
         
+        // Migration tracking
         let currentMigrations = [];
         
-        let messageStats = {}; // Not fully used yet, but kept
+        // Stats tracking
+        let messageStats = {};
         let partitionLoadHistory = [];
 
+        // Auto-scaling thresholds
         const SCALE_UP_THRESHOLD = 80;
         const SCALE_DOWN_THRESHOLD = 30;
-        const MIN_PARTITIONS = REPLICATION_FACTOR; // REPLICATION: Min partitions should be >= replication factor
+        const MIN_PARTITIONS = 2;
         const MAX_PARTITIONS = 8;
 
+        // Class to represent a partition
         class Partition {
             constructor(id) {
                 this.id = id;
                 this.name = `P${id}`;
-                this.load = 0; // Conceptual load, could be message count or CPU
-                this.messageCount = 0; // Actual messages processed by this partition as primary
+                this.load = 0;
+                this.slots = [];
                 this.color = this.generateColor();
-                // REPLICATION: Track primary and replica slots separately
-                this.primarySlots = []; // IDs of slots for which this partition is primary
-                this.replicaSlots = []; // IDs of slots for which this partition holds a replica
+                this.messageCount = 0;
             }
 
             generateColor() {
@@ -935,219 +944,162 @@
                 return colors[this.id % colors.length];
             }
 
-            // REPLICATION: Methods to add/remove primary/replica slots
-            addPrimarySlot(slotId) {
-                if (!this.primarySlots.includes(slotId)) this.primarySlots.push(slotId);
+            addSlot(slotId) {
+                if (!this.slots.includes(slotId)) {
+                    this.slots.push(slotId);
+                }
             }
-            removePrimarySlot(slotId) {
-                this.primarySlots = this.primarySlots.filter(s => s !== slotId);
-            }
-            addReplicaSlot(slotId) {
-                if (!this.replicaSlots.includes(slotId)) this.replicaSlots.push(slotId);
-            }
-            removeReplicaSlot(slotId) {
-                this.replicaSlots = this.replicaSlots.filter(s => s !== slotId);
-            }
-            getAllSlotsCount() { // REPLICATION: For distribution bar, might want total responsibility
-                return this.primarySlots.length; // Or primarySlots.length + replicaSlots.length depending on definition
+
+            removeSlot(slotId) {
+                this.slots = this.slots.filter(s => s !== slotId);
             }
         }
 
+        // Initialize the system
         function initializeSystem() {
-            slots = []; // REPLICATION: Clear slots
+            // Create slots
             for (let i = 0; i < TOTAL_SLOTS; i++) {
                 slots.push({
                     id: i,
                     angle: (i * HASH_SPACE) / TOTAL_SLOTS,
-                    active: true, // Slots are always active concept points
-                    messageCount: 0, // Messages processed by the primary for this slot
-                    primaryPartitionId: null, // REPLICATION: ID of the partition serving as primary
-                    replicaPartitionIds: []   // REPLICATION: Array of partition IDs serving as replicas
+                    active: true,
+                    messageCount: 0
                 });
             }
 
-            partitions = []; // REPLICATION: Clear partitions
-            nextPartitionId = 1;
-            for (let i = 0; i < MIN_PARTITIONS; i++) { // Start with min partitions
+            // Create initial partitions
+            for (let i = 0; i < 2; i++) {
                 const partition = new Partition(nextPartitionId++);
                 partitions.push(partition);
             }
 
-            distributeSlotsAndReplicas(); // REPLICATION: New distribution function
+            // Distribute slots to partitions
+            distributeSlots();
             
+            // Render the system
             renderHashRing();
             renderPartitionDistribution();
             updateSlotGrid();
             updateLoadMetrics();
             initializeStatsChart();
             
-            logMessage('info', `System initialized with ${TOTAL_SLOTS} slots, ${partitions.length} partitions, and replication factor ${REPLICATION_FACTOR}`);
+            logMessage('info', 'System initialized with 16 slots and 2 partitions');
 
+            // Set initial speed value display
             document.getElementById('simulationSpeed').value = simulationIntervalDelay;
             updateSpeedDisplay(simulationIntervalDelay);
-            document.getElementById('replication-factor').textContent = REPLICATION_FACTOR;
         }
 
-        // REPLICATION: Main function to distribute slots and their replicas
-        function distributeSlotsAndReplicas() {
-            // Reset assignments
-            partitions.forEach(p => {
-                p.primarySlots = [];
-                p.replicaSlots = [];
-            });
-            slots.forEach(s => {
-                s.primaryPartitionId = null;
-                s.replicaPartitionIds = [];
-            });
-
-            if (partitions.length === 0) {
-                logMessage('warning', 'No partitions available to distribute slots.');
-                return;
-            }
-            if (partitions.length < REPLICATION_FACTOR && REPLICATION_FACTOR > 1) {
-                 logMessage('warning', `Not enough partitions (${partitions.length}) for full replication factor (${REPLICATION_FACTOR}). Replication may be partial.`);
-            }
-
-
-            // Assign primary partitions for each slot
-            // Simple round-robin for primaries
+        // Consistent hashing algorithm to distribute slots
+        function distributeSlots() {
+            slotToPartitionMap = {};
+            
+            // Reset partition slots
+            partitions.forEach(p => p.slots = []);
+            
+            // Use a fair distribution algorithm
+            const activePartitions = partitions.filter(p => p.id > 0);
+            if (activePartitions.length === 0) return;
+            
             slots.forEach((slot, index) => {
-                const partitionIndex = index % partitions.length;
-                const primaryPartition = partitions[partitionIndex];
-                slot.primaryPartitionId = primaryPartition.id;
-                primaryPartition.addPrimarySlot(slot.id);
+                const partitionIndex = index % activePartitions.length;
+                const partition = activePartitions[partitionIndex];
+                
+                slotToPartitionMap[slot.id] = partition.id;
+                partition.addSlot(slot.id);
             });
-
-            // Assign replica partitions for each slot
-            if (REPLICATION_FACTOR > 1) {
-                slots.forEach(slot => {
-                    const primaryPartitionId = slot.primaryPartitionId;
-                    let availablePartitionsForReplicas = partitions.filter(p => p.id !== primaryPartitionId);
-                    
-                    // Shuffle available partitions to ensure varied replica placement
-                    availablePartitionsForReplicas.sort(() => Math.random() - 0.5);
-
-                    for (let i = 0; i < REPLICATION_FACTOR - 1 && i < availablePartitionsForReplicas.length; i++) {
-                        const replicaPartition = availablePartitionsForReplicas[i];
-                        slot.replicaPartitionIds.push(replicaPartition.id);
-                        replicaPartition.addReplicaSlot(slot.id);
-                    }
-                });
-            }
         }
 
-
+        // Render the hash ring
         function renderHashRing() {
             const container = document.getElementById('consistent-hash-ring');
             container.querySelectorAll('.slot-node, .partition-node, .mapping-line').forEach(node => {
-                if (node.id !== 'message-flow-indicator') node.remove();
+                if (node.id !== 'message-flow-indicator') {
+                    node.remove();
+                }
             });
             
-            const centerX = container.offsetWidth / 2;
-            const centerY = container.offsetHeight / 2;
-            const radius = Math.min(centerX, centerY) * 0.75; // Outer ring for slots
-            const innerRadius = radius * 0.5; // Inner ring for partitions
+            const centerX = 200;
+            const centerY = 200;
+            const radius = 150;
+            const innerRadius = 100;
             
+            // Draw slots on the outer ring
             slots.forEach(slot => {
                 const angle = (slot.angle - 90) * Math.PI / 180;
-                const x = centerX + radius * Math.cos(angle) - 22.5; // slot node width/2
-                const y = centerY + radius * Math.sin(angle) - 22.5; // slot node height/2
+                const x = centerX + radius * Math.cos(angle) - 22.5;
+                const y = centerY + radius * Math.sin(angle) - 22.5;
                 
                 const slotNode = document.createElement('div');
                 slotNode.className = `slot-node ${slot.active ? 'active' : 'inactive'}`;
                 slotNode.style.left = x + 'px';
                 slotNode.style.top = y + 'px';
                 slotNode.textContent = `S${slot.id}`;
-                slotNode.title = `Slot ${slot.id} - Messages: ${slot.messageCount}\nPrimary: P${slot.primaryPartitionId}\nReplicas: ${slot.replicaPartitionIds.map(id => `P${id}`).join(', ')}`;
+                slotNode.title = `Slot ${slot.id} - ${slot.messageCount} messages`;
                 slotNode.onclick = () => showSlotDetails(slot.id);
+                
                 container.appendChild(slotNode);
             });
             
-            const partitionPositions = [];
+            // Draw partitions in the center
             partitions.forEach((partition, index) => {
-                const angleStep = (2 * Math.PI) / Math.max(1, partitions.length);
-                const angle = index * angleStep - (Math.PI / 2) ; // Start from top
-                const x = centerX + innerRadius * Math.cos(angle) - 25; // partition node width/2
-                const y = centerY + innerRadius * Math.sin(angle) - 25; // partition node height/2
-                partitionPositions[partition.id] = { x: x + 25, y: y + 25 }; // Store center of partition node
-
+                const angleStep = 360 / partitions.length;
+                const angle = (index * angleStep - 90) * Math.PI / 180;
+                const x = centerX + innerRadius * Math.cos(angle) - 25;
+                const y = centerY + innerRadius * Math.sin(angle) - 25;
+                
                 const partitionNode = document.createElement('div');
                 partitionNode.className = 'partition-node active';
                 partitionNode.style.left = x + 'px';
                 partitionNode.style.top = y + 'px';
                 partitionNode.style.background = `linear-gradient(135deg, ${partition.color}, ${partition.color}dd)`;
                 partitionNode.textContent = partition.name;
-                partitionNode.title = `${partition.name} - Primary Slots: ${partition.primarySlots.length}, Replica Slots: ${partition.replicaSlots.length}, Messages: ${partition.messageCount}`;
+                partitionNode.title = `${partition.name} - ${partition.slots.length} slots, ${partition.messageCount} messages`;
                 partitionNode.onclick = () => showPartitionDetails(partition.id);
                 partitionNode.id = `partition-${partition.id}`;
+
                 container.appendChild(partitionNode);
-            });
-
-            // Draw mapping lines (Primaries and Replicas)
-            slots.forEach(slot => {
-                const slotAngle = (slot.angle - 90) * Math.PI / 180;
-                const slotX = centerX + radius * Math.cos(slotAngle);
-                const slotY = centerY + radius * Math.sin(slotAngle);
-
-                // Primary line
-                if (slot.primaryPartitionId && partitionPositions[slot.primaryPartitionId]) {
-                    const primaryPartPos = partitionPositions[slot.primaryPartitionId];
-                    const primaryPartition = partitions.find(p => p.id === slot.primaryPartitionId);
-                    drawMappingLine(container, slotX, slotY, primaryPartPos.x, primaryPartPos.y, primaryPartition.color, false);
-                }
-
-                // Replica lines
-                // REPLICATION: Draw lines for replicas
-                slot.replicaPartitionIds.forEach(replicaId => {
-                    if (partitionPositions[replicaId]) {
-                        const replicaPartPos = partitionPositions[replicaId];
-                        const replicaPartition = partitions.find(p => p.id === replicaId);
-                        drawMappingLine(container, slotX, slotY, replicaPartPos.x, replicaPartPos.y, replicaPartition.color, true);
-                    }
+                
+                // Draw mapping lines
+                partition.slots.forEach(slotId => {
+                    const slot = slots[slotId];
+                    const slotAngle = (slot.angle - 90) * Math.PI / 180;
+                    const slotX = centerX + radius * Math.cos(slotAngle);
+                    const slotY = centerY + radius * Math.sin(slotAngle);
+                    
+                    const line = document.createElement('div');
+                    line.className = 'mapping-line';
+                    
+                    const dx = slotX - (x + 25);
+                    const dy = slotY - (y + 25);
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const lineAngle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    line.style.width = distance + 'px';
+                    line.style.left = (x + 25) + 'px';
+                    line.style.top = (y + 25) + 'px';
+                    line.style.transform = `rotate(${lineAngle}deg)`;
+                    line.style.background = `linear-gradient(90deg, transparent, ${partition.color}88, transparent)`;
+                    
+                    container.appendChild(line);
                 });
             });
+            
             updateMetrics();
         }
 
-        function drawMappingLine(container, x1, y1, x2, y2, color, isReplica) {
-            const line = document.createElement('div');
-            line.className = 'mapping-line' + (isReplica ? ' replica' : '');
-            
-            const dx = x2 - x1;
-            const dy = y2 - y1;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-            
-            line.style.width = distance + 'px';
-            line.style.left = x1 + 'px';
-            line.style.top = y1 + 'px';
-            line.style.transform = `rotate(${angle}deg)`;
-            
-            // REPLICATION: Use partition color for replica lines too, but style distinguishes them
-            if (isReplica) {
-                 line.style.background = `linear-gradient(90deg, transparent, ${color}66, transparent)`; // More transparent for replicas
-            } else {
-                 line.style.background = `linear-gradient(90deg, transparent, ${color}CC, transparent)`; // Primary
-            }
-            container.appendChild(line);
-        }
-
-
+        // Render partition distribution
         function renderPartitionDistribution() {
             const container = document.getElementById('partition-distribution');
-            container.innerHTML = ''; // Clear previous bars
+            container.innerHTML = '';
             
             const barWidth = 30;
             const spacing = 10;
-            const maxHeight = 250; // Max height of the tallest bar
-
-            // REPLICATION: Distribution based on primary slots handled
-            const maxPrimarySlots = Math.max(1, ...partitions.map(p => p.primarySlots.length));
-
+            const maxHeight = 250;
+            
             partitions.forEach((partition, index) => {
                 const x = index * (barWidth + spacing) + spacing;
-                // REPLICATION: Height based on primary slots for main load representation
-                const height = partition.primarySlots.length > 0 ? (partition.primarySlots.length / maxPrimarySlots) * maxHeight : 0;
+                const height = (partition.slots.length / TOTAL_SLOTS) * maxHeight;
                 
                 const bar = document.createElement('div');
                 bar.className = 'distribution-bar';
@@ -1155,9 +1107,10 @@
                 bar.style.width = barWidth + 'px';
                 bar.style.height = height + 'px';
                 bar.style.background = `linear-gradient(to top, ${partition.color}, ${partition.color}dd)`;
-                bar.title = `${partition.name}: ${partition.primarySlots.length} primary slots (${((partition.primarySlots.length / TOTAL_SLOTS) * 100).toFixed(1)}% of total primary assignments)`;
+                bar.title = `${partition.name}: ${partition.slots.length} slots (${((partition.slots.length / TOTAL_SLOTS) * 100).toFixed(1)}%)`;
                 bar.onclick = () => showPartitionDetails(partition.id);
                 
+                // Add text label on top
                 const label = document.createElement('div');
                 label.style.position = 'absolute';
                 label.style.bottom = height + 5 + 'px';
@@ -1165,13 +1118,14 @@
                 label.style.transform = 'translateX(-50%)';
                 label.style.fontSize = '12px';
                 label.style.color = partition.color;
-                label.textContent = partition.primarySlots.length; // Show count of primary slots
+                label.textContent = partition.slots.length;
                 bar.appendChild(label);
                 
                 container.appendChild(bar);
             });
         }
 
+        // Update slot grid
         function updateSlotGrid() {
             const grid = document.getElementById('slot-grid');
             grid.innerHTML = '';
@@ -1180,31 +1134,23 @@
                 const card = document.createElement('div');
                 card.className = 'slot-card';
                 card.id = `slot-card-${slot.id}`;
-                const primaryPartition = partitions.find(p => p.id === slot.primaryPartitionId);
+                const partitionId = slotToPartitionMap[slot.id];
+                const partition = partitions.find(p => p.id === partitionId);
                 
-                if (primaryPartition) {
-                    card.style.borderColor = primaryPartition.color + '44';
-                    let replicaInfo = slot.replicaPartitionIds.length > 0 ?
-                        `<div style="font-size: 0.7em; color: #aaa;">Replicas: ${slot.replicaPartitionIds.map(id => `P${id}`).join(', ')}</div>` :
-                        `<div style="font-size: 0.7em; color: #aaa;">No Replicas</div>`;
-
+                if (partition) {
+                    card.style.borderColor = partition.color + '44';
                     card.innerHTML = `
                         <div style="font-weight: bold; margin-bottom: 5px;">Slot ${slot.id}</div>
-                        <div style="color: ${primaryPartition.color}; font-size: 0.9em;">Primary: ${primaryPartition.name}</div>
-                        ${replicaInfo}
-                        <div style="font-size: 0.8em; color: #888; margin-top: 5px;">${slot.messageCount} msgs</div>
-                    `;
-                } else {
-                     card.innerHTML = `
-                        <div style="font-weight: bold; margin-bottom: 5px;">Slot ${slot.id}</div>
-                        <div style="color: #888; font-size: 0.9em;">No Primary</div>
+                        <div style="color: ${partition.color}; font-size: 0.9em;">${partition.name}</div>
                         <div style="font-size: 0.8em; color: #888; margin-top: 5px;">${slot.messageCount} msgs</div>
                     `;
                 }
+                
                 grid.appendChild(card);
             });
         }
 
+        // Add a partition
         function addPartition() {
             if (partitions.length >= MAX_PARTITIONS) {
                 logMessage('error', 'Cannot add more partitions. Max limit reached.');
@@ -1221,24 +1167,26 @@
             if (stepMode) {
                 stepQueue.push({
                     action: 'rebalance',
-                    description: `Rebalancing slots & replicas after adding ${newPartition.name}`
+                    description: `Rebalancing slots after adding ${newPartition.name}`
                 });
-                logMessage('info', 'Step queued: Rebalance slots & replicas');
+                logMessage('info', 'Step queued: Rebalance slots');
             } else {
                 setTimeout(() => {
-                    rebalanceSlotsAndReplicas(); // REPLICATION: Call new function
+                    rebalanceSlots();
                 }, 500 / getSpeedFactor());
             }
         }
 
+        // Remove a partition
         function removePartition() {
             if (partitions.length <= MIN_PARTITIONS) {
-                logMessage('error', `Cannot remove partition. Minimum ${MIN_PARTITIONS} required (due to replication factor).`);
+                logMessage('error', `Cannot remove partition. Minimum ${MIN_PARTITIONS} required.`);
                 showInfoTooltip(document.getElementById('removePartitionBtn'), `Minimum ${MIN_PARTITIONS} partitions required!`, 'error', 2500);
                 return;
             }
             
-            const removedPartition = partitions.pop(); // Remove the last one for simplicity
+            const removedPartition = partitions[partitions.length -1];
+            partitions = partitions.filter(p => p.id !== removedPartition.id);
 
             logMessage('warning', `Partition ${removedPartition.name} removed, migration in progress...`);
             showInfoTooltip(document.getElementById('removePartitionBtn'), `Partition ${removedPartition.name} removed!`, 'warning', 2500);
@@ -1251,45 +1199,60 @@
             if (stepMode) {
                 stepQueue.push({
                     action: 'rebalance',
-                    description: `Rebalancing slots & replicas after removing ${removedPartition.name}`
+                    description: `Rebalancing slots after removing ${removedPartition.name}`
                 });
-                logMessage('info', 'Step queued: Rebalance slots & replicas');
+                logMessage('info', 'Step queued: Rebalance slots');
             } else {
                 setTimeout(() => {
-                    rebalanceSlotsAndReplicas(); // REPLICATION: Call new function
+                    rebalanceSlots();
                 }, 1000 / getSpeedFactor());
             }
         }
 
-        // REPLICATION: Renamed and adapted from rebalanceSlots
-        function rebalanceSlotsAndReplicas() {
-            logMessage('info', 'Rebalancing slots & replicas in progress...');
-            showInfoTooltip(document.getElementById('rebalanceBtn'), 'Slots & replicas rebalancing...', 'info', 2500);
+        // Rebalance slots with migration tracking
+        function rebalanceSlots() {
+            logMessage('info', 'Rebalancing slots in progress...');
+            showInfoTooltip(document.getElementById('rebalanceBtn'), 'Slots rebalancing...', 'info', 2500);
 
-            const oldPrimaryAssignments = {};
-            slots.forEach(slot => { oldPrimaryAssignments[slot.id] = slot.primaryPartitionId; });
+            const oldMap = {...slotToPartitionMap};
             currentMigrations = [];
             
-            distributeSlotsAndReplicas(); // REPLICATION: This now handles both primary and replica assignments
-
+            slotToPartitionMap = {};
+            partitions.forEach(p => p.slots = []);
+            
+            const activePartitions = partitions.filter(p => p.id > 0);
+            if (activePartitions.length === 0) return;
+            
+            const shuffledSlots = [...slots].sort(() => Math.random() - 0.5);
+            
+            shuffledSlots.forEach((slot, index) => {
+                const partitionIndex = index % activePartitions.length;
+                const partition = activePartitions[partitionIndex];
+                
+                slotToPartitionMap[slot.id] = partition.id;
+                partition.addSlot(slot.id);
+            });
+            
+            // Track migrations
             let migrationCount = 0;
             const ringSlotNodes = document.querySelectorAll('#consistent-hash-ring .slot-node');
 
-            slots.forEach(slot => {
-                const newPrimaryId = slot.primaryPartitionId;
-                const oldPrimaryId = oldPrimaryAssignments[slot.id];
-                if (newPrimaryId !== oldPrimaryId) {
+            Object.keys(oldMap).forEach(slotId => {
+                const currentPartitionId = slotToPartitionMap[slotId];
+                const oldPartitionId = oldMap[slotId];
+                if (currentPartitionId !== oldPartitionId) {
                     migrationCount++;
-                    const oldPartition = partitions.find(p => p.id === oldPrimaryId) || {name: 'N/A (Removed)'}; // Handle removed partition
-                    const newPartition = partitions.find(p => p.id === newPrimaryId);
+                    
+                    const oldPartition = partitions.find(p => p.id === oldPartitionId);
+                    const newPartition = partitions.find(p => p.id === currentPartitionId);
                     
                     currentMigrations.push({
-                        slotId: slot.id,
-                        from: oldPartition.name,
-                        to: newPartition ? newPartition.name : 'N/A'
+                        slotId: parseInt(slotId),
+                        from: oldPartition ? oldPartition.name : 'Unknown',
+                        to: newPartition ? newPartition.name : 'Unknown'
                     });
                     
-                    const slotNode = Array.from(ringSlotNodes).find(sn => sn.textContent === `S${slot.id}`);
+                    const slotNode = ringSlotNodes[slotId];
                     if (slotNode) {
                         slotNode.classList.add('migrating-flash');
                         setTimeout(() => {
@@ -1307,24 +1270,24 @@
                 renderHashRing();
                 renderPartitionDistribution();
                 updateSlotGrid();
-                updateStatsChart(); // Potentially update based on new distribution
+                updateStatsChart();
             }, 300 / getSpeedFactor());
             
-            logMessage('success', `Rebalancing completed: ${migrationCount} primary slot assignments changed. Replicas also re-evaluated.`);
+            logMessage('success', `Rebalancing completed: ${migrationCount} slots migrated`);
         }
 
-
+        // Show migration information
         function showMigrationInfo() {
             const migrationInfo = document.getElementById('migrationInfo');
             const migrationDetails = document.getElementById('migrationDetails');
             
             migrationInfo.classList.add('active');
             
-            let detailsHTML = '<p>Primary slot migrations:</p><ul style="margin: 10px 0; padding-left: 20px;">';
+            let detailsHTML = '<ul style="margin: 10px 0; padding-left: 20px;">';
             currentMigrations.forEach(migration => {
                 detailsHTML += `<li>Slot ${migration.slotId}: ${migration.from} → ${migration.to}</li>`;
             });
-            detailsHTML += '</ul><p style="font-size:0.9em; color:#ccc;">Replica assignments were also re-evaluated.</p>';
+            detailsHTML += '</ul>';
             
             migrationDetails.innerHTML = detailsHTML;
             
@@ -1333,6 +1296,7 @@
             }, 3000 / getSpeedFactor());
         }
 
+        // Test hash function
         function testHash() {
             const input = document.getElementById('hashTestInput').value.trim();
             if (!input) {
@@ -1342,22 +1306,11 @@
             
             const hash = hashFunction(input);
             const slotId = hash % TOTAL_SLOTS;
-            const slot = slots.find(s => s.id === slotId);
-            const primaryPartitionId = slot ? slot.primaryPartitionId : null;
-            const primaryPartition = primaryPartitionId ? partitions.find(p => p.id === primaryPartitionId) : null;
+            const partitionId = slotToPartitionMap[slotId];
+            const partition = partitions.find(p => p.id === partitionId);
             
             const resultDiv = document.getElementById('hashTestResult');
             resultDiv.style.display = 'block';
-
-            let replicaInfoHTML = '';
-            if (slot && slot.replicaPartitionIds.length > 0) {
-                replicaInfoHTML = `
-                <div class="metric">
-                    <span class="metric-label">Replica Partitions</span>
-                    <span class="metric-value" style="font-size:0.9em;">${slot.replicaPartitionIds.map(id => `P${id}`).join(', ')}</span>
-                </div>`;
-            }
-
             resultDiv.innerHTML = `
                 <h4 style="color: #00ff88; margin-bottom: 10px;">Hash Result for "${input}"</h4>
                 <div class="metric">
@@ -1369,36 +1322,42 @@
                     <span class="metric-value">Slot ${slotId}</span>
                 </div>
                 <div class="metric">
-                    <span class="metric-label">Primary Partition</span>
-                    <span class="metric-value" style="color: ${primaryPartition ? primaryPartition.color : '#888'}">${primaryPartition ? primaryPartition.name : 'Unknown'}</span>
+                    <span class="metric-label">Target Partition</span>
+                    <span class="metric-value" style="color: ${partition ? partition.color : '#888'}">${partition ? partition.name : 'Unknown'}</span>
                 </div>
-                ${replicaInfoHTML}
                 <div style="margin-top: 15px; padding: 10px; background: rgba(0, 255, 136, 0.1); border-radius: 8px;">
-                    <strong>Path:</strong> "${input}" → Hash(${hash}) → Slot ${slotId} → Primary: ${primaryPartition ? primaryPartition.name : 'Unknown'}
+                    <strong>Path:</strong> "${input}" → Hash(${hash}) → Slot ${slotId} → ${partition ? partition.name : 'Unknown'}
                 </div>
             `;
             
-            const slotNodeElement = Array.from(document.querySelectorAll('#consistent-hash-ring .slot-node')).find(sn => sn.textContent === `S${slotId}`);
-            if (slotNodeElement) {
-                slotNodeElement.classList.add('highlighted');
-                setTimeout(() => slotNodeElement.classList.remove('highlighted'), 1000);
+            // Animate the path
+            const slotNode = document.querySelector(`#consistent-hash-ring .slot-node:nth-child(${slotId + 1})`);
+            if (slotNode) {
+                slotNode.classList.add('highlighted');
+                setTimeout(() => {
+                    slotNode.classList.remove('highlighted');
+                }, 1000);
             }
             
-            if (primaryPartition) {
-                const partitionNode = document.getElementById(`partition-${primaryPartition.id}`);
+            if (partition) {
+                const partitionNode = document.getElementById(`partition-${partition.id}`);
                 if (partitionNode) {
                     partitionNode.classList.add('highlight-pulse');
-                    setTimeout(() => partitionNode.classList.remove('highlight-pulse'), 1000);
+                    setTimeout(() => {
+                        partitionNode.classList.remove('highlight-pulse');
+                    }, 1000);
                 }
             }
             
-            logMessage('info', `Hash test: "${input}" → Slot ${slotId} → Primary: ${primaryPartition ? primaryPartition.name : 'Unknown'}`);
+            logMessage('info', `Hash test: "${input}" → Slot ${slotId} → ${partition ? partition.name : 'Unknown'}`);
         }
 
+        // Show hash test modal
         function showHashTest() {
             document.getElementById('hashTestInput').focus();
         }
 
+        // Toggle step mode
         function toggleStepMode() {
             stepMode = !stepMode;
             const stepControls = document.getElementById('stepControls');
@@ -1419,6 +1378,7 @@
             }
         }
 
+        // Execute next step
         function nextStep() {
             if (stepQueue.length === 0) {
                 logMessage('info', 'No pending steps. Perform an action to queue steps.');
@@ -1430,7 +1390,7 @@
             
             switch(step.action) {
                 case 'rebalance':
-                    rebalanceSlotsAndReplicas(); // REPLICATION: Call new function
+                    rebalanceSlots();
                     break;
                 case 'generate':
                     generateMessage();
@@ -1438,6 +1398,7 @@
             }
         }
 
+        // Auto play steps
         function autoPlay() {
             if (autoPlayInterval) {
                 clearInterval(autoPlayInterval);
@@ -1448,64 +1409,56 @@
                 autoPlayInterval = setInterval(() => {
                     if (stepQueue.length > 0) {
                         nextStep();
-                    } else if (loadSimulationInterval) { // If auto-scaling demo is running, let it queue more steps
-                        // Potentially add a small delay or just let the main simulation loop queue steps
-                    } else {
-                         clearInterval(autoPlayInterval);
-                         autoPlayInterval = null;
-                         logMessage('info', 'Auto-play finished: no more steps and simulation not running.');
                     }
                 }, 1000 / getSpeedFactor());
             }
         }
 
-        function initializeStatsChart() { updateStatsChart(); }
+        // Initialize stats chart
+        function initializeStatsChart() {
+            updateStatsChart();
+        }
 
+        // Update stats chart
         function updateStatsChart() {
             const container = document.getElementById('chartContainer');
             container.innerHTML = '';
             
             const maxBars = 30;
-            const barWidth = Math.max(1, container.offsetWidth / maxBars); // Ensure barWidth is at least 1
+            const barWidth = container.offsetWidth / maxBars;
             
-            const currentPrimaryLoads = partitions.map(p => ({
+            // Add current partition loads to history
+            const currentLoads = partitions.map(p => ({
                 id: p.id,
-                load: p.primarySlots.length, // REPLICATION: Chart based on primary slots
+                load: p.slots.length,
                 color: p.color
             }));
             
-            partitionLoadHistory.push(currentPrimaryLoads);
+            partitionLoadHistory.push(currentLoads);
             if (partitionLoadHistory.length > maxBars) {
                 partitionLoadHistory.shift();
             }
             
+            // Render history
             partitionLoadHistory.forEach((loads, timeIndex) => {
-                let yOffset = 0; // Percentage offset from bottom for stacking
-                const totalLoadAtTime = loads.reduce((sum, l) => sum + l.load, 0); // Total slots assigned as primary at this time step
-
+                let yOffset = 0;
                 loads.forEach(partitionLoad => {
-                    // Calculate height as a percentage of the container's height,
-                    // relative to the total number of slots in the system.
-                    const heightPercent = totalLoadAtTime > 0 ? (partitionLoad.load / TOTAL_SLOTS) * 100 : 0;
-                    
-                    if (heightPercent > 0) {
-                        const bar = document.createElement('div');
-                        bar.style.position = 'absolute';
-                        bar.style.left = (timeIndex * barWidth) + 'px';
-                        bar.style.bottom = yOffset + '%';
-                        bar.style.width = (barWidth - 1) + 'px'; // -1 for slight gap
-                        bar.style.height = heightPercent + '%';
-                        bar.style.background = partitionLoad.color;
-                        bar.style.opacity = '0.8';
-                        bar.title = `P${partitionLoad.id}: ${partitionLoad.load} primary slots at t-${partitionLoadHistory.length - 1 - timeIndex}`;
-                        container.appendChild(bar);
-                        yOffset += heightPercent; // Stack the next bar on top
-                    }
+                    const height = (partitionLoad.load / TOTAL_SLOTS) * 100;
+                    const bar = document.createElement('div');
+                    bar.style.position = 'absolute';
+                    bar.style.left = (timeIndex * barWidth) + 'px';
+                    bar.style.bottom = yOffset + '%';
+                    bar.style.width = (barWidth - 1) + 'px';
+                    bar.style.height = height + '%';
+                    bar.style.background = partitionLoad.color;
+                    bar.style.opacity = '0.8';
+                    container.appendChild(bar);
+                    yOffset += height;
                 });
             });
         }
 
-
+        // Simulate load with auto-scaling
         function simulateLoad() {
             const simulateLoadBtn = document.getElementById('simulateLoadBtn');
             if (loadSimulationInterval) {
@@ -1535,23 +1488,33 @@
             logMessage('info', 'Starting load simulation with auto-scaling...');
             simulateLoadBtn.textContent = '⏹️ Stop Demo';
             showInfoTooltip(simulateLoadBtn, 'Auto-scaling simulation started!', 'success', 2500);
-            startMessageAnimation(); // Visual cue for messages flowing
+            startMessageAnimation();
 
             let phase = 0;
             loadSimulationInterval = setInterval(() => {
                 phase++;
-                if (phase < 20) targetLoad = Math.min(100, targetLoad + 10);
-                else if (phase < 40) targetLoad = 90 + Math.random() * 10;
-                else if (phase < 60) targetLoad = Math.max(20, targetLoad - 5);
-                else if (phase < 80) targetLoad = 20 + Math.random() * 20;
-                else phase = 0;
+                
+                if (phase < 20) {
+                    targetLoad = Math.min(100, targetLoad + 10);
+                } else if (phase < 40) {
+                    targetLoad = 90 + Math.random() * 10;
+                } else if (phase < 60) {
+                    targetLoad = Math.max(20, targetLoad - 5);
+                } else if (phase < 80) {
+                    targetLoad = 20 + Math.random() * 20;
+                } else {
+                    phase = 0;
+                }
                 
                 currentLoad = currentLoad * 0.7 + targetLoad * 0.3;
                 
                 const messageRate = Math.floor(currentLoad / 10);
                 for (let i = 0; i < messageRate; i++) {
                     if (stepMode) {
-                        stepQueue.push({ action: 'generate', description: 'Generate message based on load' });
+                        stepQueue.push({
+                            action: 'generate',
+                            description: 'Generate message based on load'
+                        });
                     } else {
                         generateMessage();
                     }
@@ -1563,99 +1526,96 @@
                 checkAutoScaling();
                 updateLoadMetrics();
                 updateLoadVisualization();
+                
             }, simulationIntervalDelay);
         }
         
+        // Generate a message and track load
         function generateMessage() {
             const key = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             const hash = hashFunction(key);
             const slotId = hash % TOTAL_SLOTS;
-            const slot = slots.find(s => s.id === slotId);
-
-            if (!slot || slot.primaryPartitionId === null) {
-                 // logMessage('warning', `No primary partition for slot ${slotId}. Message for ${key} dropped.`);
-                 return; // Message cannot be processed if no primary
-            }
+            const partitionId = slotToPartitionMap[slotId];
+            const partition = partitions.find(p => p.id === partitionId);
             
-            const primaryPartition = partitions.find(p => p.id === slot.primaryPartitionId);
-            
-            if (primaryPartition) {
-                primaryPartition.messageCount++; // Messages counted on primary
-                slot.messageCount++;
+            if (partition) {
+                partition.load++;
+                partition.messageCount++;
+                slots[slotId].messageCount++;
                 
-                const slotNodeElement = Array.from(document.querySelectorAll('#consistent-hash-ring .slot-node')).find(sn => sn.textContent === `S${slotId}`);
-                if (slotNodeElement) {
-                    slotNodeElement.classList.add('highlighted');
-                    slotNodeElement.title = `Slot ${slot.id} - Messages: ${slot.messageCount}\nPrimary: P${slot.primaryPartitionId}\nReplicas: ${slot.replicaPartitionIds.map(id => `P${id}`).join(', ')}`;
-                    setTimeout(() => slotNodeElement.classList.remove('highlighted'), 300 / getSpeedFactor());
+                const slotNode = document.querySelector(`#consistent-hash-ring .slot-node:nth-child(${slotId + 1})`);
+                if (slotNode) {
+                    slotNode.classList.add('highlighted');
+                    setTimeout(() => {
+                        slotNode.classList.remove('highlighted');
+                    }, 300 / getSpeedFactor());
                 }
 
-                const partitionNode = document.getElementById(`partition-${primaryPartition.id}`);
+                const partitionNode = document.getElementById(`partition-${partition.id}`);
                 if (partitionNode) {
                     partitionNode.classList.add('highlight-pulse');
-                    partitionNode.title = `${primaryPartition.name} - Primary Slots: ${primaryPartition.primarySlots.length}, Replica Slots: ${primaryPartition.replicaSlots.length}, Messages: ${primaryPartition.messageCount}`;
-                    setTimeout(() => partitionNode.classList.remove('highlight-pulse'), 600 / getSpeedFactor());
+                    setTimeout(() => {
+                        partitionNode.classList.remove('highlight-pulse');
+                    }, 600 / getSpeedFactor());
                 }
 
-                // Animate message flow indicator towards the slot, not partition
                 const messageFlowIndicator = document.getElementById('message-flow-indicator');
-                 if (messageFlowIndicator) {
-                    const targetAngle = slot.angle; // Angle of the slot itself
-                    messageFlowIndicator.style.transform = `translate(-50%, -50%) rotate(${targetAngle}deg)`; // Point arrow towards slot on ring
+                if (messageFlowIndicator) {
+                    const slot = slots[slotId];
+                    const targetAngle = slot.angle;
+                    messageFlowIndicator.style.transform = `translate(-50%, -50%) rotate(${targetAngle}deg)`;
                     messageFlowIndicator.classList.add('active');
-                    setTimeout(() => messageFlowIndicator.classList.remove('active'), 500 / getSpeedFactor());
+                    setTimeout(() => {
+                        messageFlowIndicator.classList.remove('active');
+                    }, 500 / getSpeedFactor());
                 }
                 
+                // Update slot card
                 const slotCard = document.getElementById(`slot-card-${slotId}`);
                 if (slotCard) {
                     slotCard.classList.add('highlighted');
-                     // REPLICATION: Update card content if necessary, especially message count
-                    const primaryPartForCard = partitions.find(p => p.id === slot.primaryPartitionId);
-                    if (primaryPartForCard) {
-                         let replicaInfo = slot.replicaPartitionIds.length > 0 ?
-                            `<div style="font-size: 0.7em; color: #aaa;">Replicas: ${slot.replicaPartitionIds.map(id => `P${id}`).join(', ')}</div>` :
-                            `<div style="font-size: 0.7em; color: #aaa;">No Replicas</div>`;
-                        slotCard.innerHTML = `
-                            <div style="font-weight: bold; margin-bottom: 5px;">Slot ${slot.id}</div>
-                            <div style="color: ${primaryPartForCard.color}; font-size: 0.9em;">Primary: ${primaryPartForCard.name}</div>
-                            ${replicaInfo}
-                            <div style="font-size: 0.8em; color: #888; margin-top: 5px;">${slot.messageCount} msgs</div>
-                        `;
-                    }
                     setTimeout(() => {
                         slotCard.classList.remove('highlighted');
-                        // updateSlotGrid(); // Could be too frequent, let main updates handle or specific update here
+                        updateSlotGrid();
                     }, 300 / getSpeedFactor());
                 }
             }
         }
         
+        // Check if auto-scaling is needed
         function checkAutoScaling() {
-            const avgLoad = currentLoad; // Using overall system load percentage
+            const avgLoad = currentLoad;
             const currentPartitionCount = partitions.length;
             
-            // Scale Up
             if (avgLoad > SCALE_UP_THRESHOLD && currentPartitionCount < MAX_PARTITIONS) {
                 const newPartition = new Partition(nextPartitionId++);
                 partitions.push(newPartition);
                 logMessage('warning', `High load detected (${avgLoad.toFixed(1)}%). Scaling up to ${partitions.length} partitions`);
                 showInfoTooltip(document.getElementById('simulateLoadBtn'), `Scaling UP! ${newPartition.name} added.`, 'warning', 2500);
 
-                setTimeout(() => rebalanceSlotsAndReplicas(), 500 / getSpeedFactor());
-            
-            // Scale Down
+                setTimeout(() => {
+                    rebalanceSlots();
+                }, 500 / getSpeedFactor());
+                
             } else if (avgLoad < SCALE_DOWN_THRESHOLD && currentPartitionCount > MIN_PARTITIONS) {
-                const removedPartition = partitions.pop(); // Simpler: remove last
+                const removedPartition = partitions[partitions.length -1];
+                partitions = partitions.filter(p => p.id !== removedPartition.id);
+
                 logMessage('info', `Low load detected (${avgLoad.toFixed(1)}%). Scaling down to ${partitions.length} partitions`);
                 showInfoTooltip(document.getElementById('simulateLoadBtn'), `Scaling DOWN! ${removedPartition.name} removed.`, 'info', 2500);
 
                 const partitionNodeToRemove = document.getElementById(`partition-${removedPartition.id}`);
-                if (partitionNodeToRemove) partitionNodeToRemove.classList.add('migrating');
+                if (partitionNodeToRemove) {
+                    partitionNodeToRemove.classList.add('migrating');
+                }
                 
-                setTimeout(() => rebalanceSlotsAndReplicas(), 1000 / getSpeedFactor());
+                setTimeout(() => {
+                    rebalanceSlots();
+                }, 1000 / getSpeedFactor());
             }
         }
         
+        // Update load visualization
         function updateLoadVisualization() {
             let loadBar = document.getElementById('load-indicator');
             if (!loadBar) {
@@ -1665,12 +1625,25 @@
                     <div style="margin: 20px 0;">
                         <h4 style="margin-bottom: 10px; color: #667eea;">System Load</h4>
                         <div style="background: rgba(255,255,255,0.1); border-radius: 10px; height: 30px; position: relative; overflow: hidden;">
-                            <div id="load-indicator" style="position: absolute; left: 0; top: 0; height: 100%; background: linear-gradient(90deg, #00ff88, #667eea); transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">0%</div>
+                            <div id="load-indicator" style="
+                                position: absolute;
+                                left: 0;
+                                top: 0;
+                                height: 100%;
+                                background: linear-gradient(90deg, #00ff88, #667eea);
+                                transition: width 0.3s ease;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                color: white;
+                                font-weight: bold;
+                            ">0%</div>
                             <div style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #888; font-size: 0.9em;">
                                 Auto-scale: ${SCALE_DOWN_THRESHOLD}% ↓ | ${SCALE_UP_THRESHOLD}% ↑
                             </div>
                         </div>
-                    </div>`;
+                    </div>
+                `;
                 controlsDiv.insertAdjacentElement('afterend', loadContainer);
                 loadBar = document.getElementById('load-indicator');
             }
@@ -1678,96 +1651,118 @@
             loadBar.style.width = currentLoad + '%';
             loadBar.textContent = currentLoad.toFixed(1) + '%';
             
-            if (currentLoad > SCALE_UP_THRESHOLD) loadBar.style.background = 'linear-gradient(90deg, #ff6b6b, #ff5252)';
-            else if (currentLoad < SCALE_DOWN_THRESHOLD) loadBar.style.background = 'linear-gradient(90deg, #4ecdc4, #44a3aa)';
-            else loadBar.style.background = 'linear-gradient(90deg, #00ff88, #667eea)';
+            if (currentLoad > SCALE_UP_THRESHOLD) {
+                loadBar.style.background = 'linear-gradient(90deg, #ff6b6b, #ff5252)';
+            } else if (currentLoad < SCALE_DOWN_THRESHOLD) {
+                loadBar.style.background = 'linear-gradient(90deg, #4ecdc4, #44a3aa)';
+            } else {
+                loadBar.style.background = 'linear-gradient(90deg, #00ff88, #667eea)';
+            }
         }
         
+        // Update load metrics
         function updateLoadMetrics() {
             document.getElementById('total-slots').textContent = TOTAL_SLOTS;
             document.getElementById('active-partitions').textContent = partitions.length;
-            // The replication factor display is static text based on const REPLICATION_FACTOR
+            document.getElementById('replication-factor').textContent = '3';
             
             let loadMetric = document.getElementById('current-load-metric');
             if (!loadMetric) {
                 const metricsContainer = document.querySelector('.slot-details');
                 const loadDiv = document.createElement('div');
                 loadDiv.className = 'metric';
-                loadDiv.innerHTML = `<span class="metric-label">Current Load</span><span class="metric-value" id="current-load-metric">0%</span>`;
+                loadDiv.innerHTML = `
+                    <span class="metric-label">Current Load</span>
+                    <span class="metric-value" id="current-load-metric">0%</span>
+                `;
                 metricsContainer.appendChild(loadDiv);
                 loadMetric = document.getElementById('current-load-metric');
             }
+            
             loadMetric.textContent = currentLoad.toFixed(1) + '%';
             
+            // Add total messages metric if not exists
             let totalMessagesMetric = document.getElementById('total-messages-metric');
             if (!totalMessagesMetric) {
                 const metricsContainer = document.querySelector('.slot-details');
                 const messagesDiv = document.createElement('div');
                 messagesDiv.className = 'metric';
-                messagesDiv.innerHTML = `<span class="metric-label">Total Messages</span><span class="metric-value" id="total-messages-metric">0</span>`;
+                messagesDiv.innerHTML = `
+                    <span class="metric-label">Total Messages</span>
+                    <span class="metric-value" id="total-messages-metric">0</span>
+                `;
                 metricsContainer.appendChild(messagesDiv);
                 totalMessagesMetric = document.getElementById('total-messages-metric');
             }
-            const totalMessages = slots.reduce((sum, s) => sum + s.messageCount, 0); // Sum messages from slots
+            
+            const totalMessages = partitions.reduce((sum, p) => sum + p.messageCount, 0);
             totalMessagesMetric.textContent = totalMessages;
         }
 
+        // Simple hash function
         function hashFunction(key) {
             let hash = 0;
             for (let i = 0; i < key.length; i++) {
                 const char = key.charCodeAt(i);
                 hash = ((hash << 5) - hash) + char;
-                hash = hash & hash; // Convert to 32bit integer
+                hash = hash & hash;
             }
             return Math.abs(hash);
         }
 
+        // Show slot details
         function showSlotDetails(slotId) {
-            const slot = slots.find(s => s.id === slotId);
-            if (!slot) return;
-            const primaryPartition = partitions.find(p => p.id === slot.primaryPartitionId);
+            const slot = slots[slotId];
+            const partitionId = slotToPartitionMap[slotId];
+            const partition = partitions.find(p => p.id === partitionId);
             
             const modal = document.getElementById('infoModal');
             const modalTitle = document.getElementById('modalTitle');
             const modalBody = document.getElementById('modalBody');
             
             modalTitle.textContent = `Slot ${slotId} Details`;
-
-            let replicaInfoHTML = 'N/A';
-            if (slot.replicaPartitionIds.length > 0) {
-                replicaInfoHTML = slot.replicaPartitionIds.map(id => {
-                    const p = partitions.find(part => part.id === id);
-                    return `<span style="color:${p ? p.color : '#ccc'};">${p ? p.name : 'P?'}</span>`;
-                }).join(', ');
-            }
-            
             modalBody.innerHTML = `
                 <div class="metric">
-                    <span class="metric-label">Slot ID</span><span class="metric-value">${slotId}</span>
+                    <span class="metric-label">Slot ID</span>
+                    <span class="metric-value">${slotId}</span>
                 </div>
                 <div class="metric">
-                    <span class="metric-label">Hash Position</span><span class="metric-value">${slot.angle}°</span>
+                    <span class="metric-label">Hash Position</span>
+                    <span class="metric-value">${slot.angle}°</span>
                 </div>
                 <div class="metric">
-                    <span class="metric-label">Primary Partition</span>
-                    <span class="metric-value" style="color: ${primaryPartition ? primaryPartition.color : '#888'}">${primaryPartition ? primaryPartition.name : 'Unassigned'}</span>
+                    <span class="metric-label">Assigned Partition</span>
+                    <span class="metric-value" style="color: ${partition ? partition.color : '#888'}">${partition ? partition.name : 'Unassigned'}</span>
                 </div>
                 <div class="metric">
-                    <span class="metric-label">Replica Partitions</span><span class="metric-value" style="font-size:0.9em;">${replicaInfoHTML}</span>
+                    <span class="metric-label">Messages Processed</span>
+                    <span class="metric-value">${slot.messageCount}</span>
                 </div>
                 <div class="metric">
-                    <span class="metric-label">Messages Processed</span><span class="metric-value">${slot.messageCount}</span>
+                    <span class="metric-label">Status</span>
+                    <span class="metric-value">${slot.active ? 'Active' : 'Inactive'}</span>
                 </div>
                 <div style="margin-top: 20px;">
-                    <h4>Slot Role & Replication</h4>
+                    <h4>How Slot Mapping Works</h4>
                     <p style="color: #888; line-height: 1.6;">
-                        Slot ${slotId} is primarily managed by ${primaryPartition ? primaryPartition.name : 'N/A'}. 
-                        For fault tolerance (with a factor of ${REPLICATION_FACTOR}), it is replicated on: ${slot.replicaPartitionIds.length > 0 ? slot.replicaPartitionIds.map(id => `P${id}`).join(', ') : 'none'}.
+                        Slot ${slotId} is a fixed point on the hash ring at position ${slot.angle}°. 
+                        When a message is hashed, if the result modulo ${TOTAL_SLOTS} equals ${slotId}, 
+                        it will be routed to this slot. The slot then forwards the message to its 
+                        assigned partition (currently ${partition ? partition.name : 'none'}).
                     </p>
-                </div>`;
+                    <div style="background: rgba(102, 126, 234, 0.1); padding: 15px; border-radius: 10px; margin-top: 15px;">
+                        <strong>Example:</strong><br>
+                        Hash("user_123") = 98765<br>
+                        98765 % 16 = ${slotId}<br>
+                        → Route to Slot ${slotId} → ${partition ? partition.name : 'Unassigned'}
+                    </div>
+                </div>
+            `;
+            
             modal.style.display = 'flex';
         }
 
+        // Show partition details
         function showPartitionDetails(partitionId) {
             const partition = partitions.find(p => p.id === partitionId);
             if (!partition) return;
@@ -1777,40 +1772,56 @@
             const modalBody = document.getElementById('modalBody');
             
             modalTitle.textContent = `Partition ${partition.name} Details`;
-
-            const primarySlotsList = partition.primarySlots.map(slotId => {
-                const s = slots.find(sl => sl.id === slotId);
-                return `<span style="background: ${partition.color}44; padding: 3px 6px; border-radius: 4px; font-size: 0.85em; margin-right:3px; display:inline-block;">S${slotId} (${s?s.messageCount:0}m)</span>`;
-            }).join(' ');
-
-            const replicaSlotsList = partition.replicaSlots.map(slotId => 
-                 `<span style="background: #555; color: #ccc; padding: 3px 6px; border-radius: 4px; font-size: 0.85em; margin-right:3px; display:inline-block;">S${slotId} (R)</span>`
-            ).join(' ');
-
             modalBody.innerHTML = `
                 <div class="metric">
-                    <span class="metric-label">Name</span><span class="metric-value">${partition.name}</span>
+                    <span class="metric-label">Name</span>
+                    <span class="metric-value">${partition.name}</span>
                 </div>
                 <div class="metric">
-                    <span class="metric-label">Primary Slots Handled</span><span class="metric-value">${partition.primarySlots.length}</span>
-                </div>
-                 <div class="metric">
-                    <span class="metric-label">Replica Slots Handled</span><span class="metric-value">${partition.replicaSlots.length}</span>
+                    <span class="metric-label">Managed Slots</span>
+                    <span class="metric-value">${partition.slots.length} / ${TOTAL_SLOTS}</span>
                 </div>
                 <div class="metric">
-                    <span class="metric-label">Messages Processed (as Primary)</span><span class="metric-value">${partition.messageCount}</span>
+                    <span class="metric-label">Messages Processed</span>
+                    <span class="metric-value">${partition.messageCount}</span>
                 </div>
-                <div style="margin-top: 15px;">
-                    <h4 style="color:${partition.color};">Primary Slots:</h4>
-                    <div style="margin-top: 5px; max-height: 100px; overflow-y:auto; padding:5px; background:rgba(255,255,255,0.03); border-radius:5px;">${partition.primarySlots.length > 0 ? primarySlotsList : 'None'}</div>
+                <div class="metric">
+                    <span class="metric-label">Ring Percentage</span>
+                    <span class="metric-value">${((partition.slots.length / TOTAL_SLOTS) * 100).toFixed(1)}%</span>
                 </div>
-                <div style="margin-top: 10px;">
-                    <h4 style="color:#ccc;">Replica Slots:</h4>
-                     <div style="margin-top: 5px; max-height: 100px; overflow-y:auto; padding:5px; background:rgba(255,255,255,0.03); border-radius:5px;">${partition.replicaSlots.length > 0 ? replicaSlotsList : 'None'}</div>
-                </div>`;
+                <div class="metric">
+                    <span class="metric-label">Avg Messages/Slot</span>
+                    <span class="metric-value">${partition.slots.length > 0 ? (partition.messageCount / partition.slots.length).toFixed(2) : 0}</span>
+                </div>
+                <div style="margin-top: 20px;">
+                    <h4>Assigned Slots</h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
+                        ${partition.slots.map(slotId => {
+                            const slotMessages = slots[slotId].messageCount;
+                            return `<span style="background: ${partition.color}44; padding: 5px 10px; border-radius: 5px; font-size: 0.9em;">
+                                Slot ${slotId} (${slotMessages} msgs)
+                            </span>`;
+                        }).join('')}
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <h4>Load Distribution Benefits</h4>
+                    <p style="color: #888; line-height: 1.6;">
+                        With consistent hashing and slot-based mapping, this partition can be:
+                    </p>
+                    <ul style="color: #888; line-height: 1.8; margin-left: 20px;">
+                        <li>Added or removed without rehashing all data</li>
+                        <li>Scaled independently based on load</li>
+                        <li>Replicated for fault tolerance</li>
+                        <li>Migrated to different hardware seamlessly</li>
+                    </ul>
+                </div>
+            `;
+            
             modal.style.display = 'flex';
         }
 
+        // Show system information
         function showSystemInfo() {
             const modal = document.getElementById('infoModal');
             const modalTitle = document.getElementById('modalTitle');
@@ -1820,74 +1831,116 @@
             modalBody.innerHTML = `
                 <h3 style="color: #667eea; margin-bottom: 15px;">🎯 Core Concepts</h3>
                 <div style="background: rgba(102, 126, 234, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                    <h4 style="color: #00ff88;">1. Consistent Hashing & Slot Mapping</h4>
+                    <h4 style="color: #00ff88;">1. Consistent Hashing</h4>
                     <p style="color: #888; line-height: 1.6;">
-                        Messages are mapped to fixed logical slots (0-${TOTAL_SLOTS - 1}) on a conceptual ring. This ensures even distribution and minimizes reshuffling when partitions are added or removed.
+                        Maps data to a fixed-size hash space (ring). Each key is hashed to a position 
+                        on the ring, ensuring even distribution and minimal redistribution when nodes change.
                     </p>
                 </div>
+                
                 <div style="background: rgba(102, 126, 234, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                    <h4 style="color: #00ff88;">2. Data Replication (Factor: ${REPLICATION_FACTOR})</h4>
+                    <h4 style="color: #00ff88;">2. Slot-Based Mapping</h4>
                     <p style="color: #888; line-height: 1.6;">
-                        Each slot's data is managed by one <strong style="color:${partitions[0]?partitions[0].color:'white'};">Primary Partition</strong> and replicated to ${REPLICATION_FACTOR-1} <strong style="color:#ccc;">Replica Partition(s)</strong>. This provides fault tolerance. If a primary fails, a replica can take over (failover logic not simulated in this demo).
+                        The hash ring is divided into fixed slots (16 in this demo). Messages are 
+                        assigned to slots, not directly to partitions. This indirection enables:
                     </p>
+                    <ul style="color: #888; margin-left: 20px;">
+                        <li>Zero-downtime scaling</li>
+                        <li>Predictable data distribution</li>
+                        <li>Simple rebalancing logic</li>
+                    </ul>
                 </div>
-                <div style="background: rgba(102, 126, 234, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                    <h4 style="color: #00ff88;">3. Elastic Scaling</h4>
-                    <p style="color: #888; line-height: 1.6;">
-                        Partitions (servers) can be added or removed. The system rebalances primary and replica slot assignments to adapt to the new cluster size, aiming for even load distribution and maintaining the replication factor.
-                    </p>
-                </div>
-                <h3 style="color: #667eea; margin-bottom: 15px;">📊 How It Works (Example)</h3>
-                 <div style="background: rgba(0, 255, 136, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                
+                <h3 style="color: #667eea; margin-bottom: 15px; margin-top: 30px;">📊 How It Works</h3>
+                <div style="background: rgba(0, 255, 136, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
                     <ol style="color: #888; line-height: 1.8; margin-left: 20px;">
-                        <li><strong>Message Arrives:</strong> e.g., "order_12345"</li>
-                        <li><strong>Hash Calculated:</strong> Hash("order_12345") → (some number)</li>
-                        <li><strong>Slot Determined:</strong> Hash % ${TOTAL_SLOTS} → Slot S (e.g., S5)</li>
-                        <li><strong>Primary Partition Lookup:</strong> Slot S → Primary Partition P (e.g., P2)</li>
-                        <li><strong>Message Routed:</strong> Sent to P2 (Primary for S5)</li>
-                        <li><strong>Replication (Conceptual):</strong> P2 would ensure data for S5 is also updated on its replica partitions.</li>
+                        <li><strong>Message arrives:</strong> "order_12345"</li>
+                        <li><strong>Hash calculated:</strong> Hash("order_12345") = 98765</li>
+                        <li><strong>Slot determined:</strong> 98765 % 16 = 5</li>
+                        <li><strong>Partition lookup:</strong> Slot 5 → Partition P2</li>
+                        <li><strong>Message routed:</strong> Send to Partition P2</li>
                     </ol>
-                </div>`;
+                </div>
+                
+                <h3 style="color: #667eea; margin-bottom: 15px;">🔄 Elastic Scaling Process</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div style="background: rgba(255, 215, 61, 0.1); padding: 10px; border-radius: 8px;">
+                        <strong style="color: #ffd93d;">Scale Up</strong><br>
+                        <span style="color: #888; font-size: 0.9em;">
+                            1. Add new partition<br>
+                            2. Redistribute slots evenly<br>
+                            3. Migrate affected data<br>
+                            4. Update routing table
+                        </span>
+                    </div>
+                    <div style="background: rgba(255, 107, 107, 0.1); padding: 10px; border-radius: 8px;">
+                        <strong style="color: #ff6b6b;">Scale Down</strong><br>
+                        <span style="color: #888; font-size: 0.9em;">
+                            1. Select partition to remove<br>
+                            2. Redistribute its slots<br>
+                            3. Migrate data to remaining<br>
+                            4. Decommission partition
+                        </span>
+                    </div>
+                </div>
+                
+                <h3 style="color: #667eea; margin-bottom: 15px; margin-top: 30px;">💡 Key Benefits</h3>
+                <div style="background: rgba(102, 126, 234, 0.05); padding: 15px; border-radius: 10px;">
+                    <p style="color: #888; line-height: 1.8;">
+                        <strong>✓ Minimal Data Movement:</strong> Only ~1/N of data moves when adding/removing nodes<br>
+                        <strong>✓ No Downtime:</strong> Clients continue using the same slot addresses<br>
+                        <strong>✓ Load Balancing:</strong> Even distribution across all partitions<br>
+                        <strong>✓ Fault Tolerance:</strong> Easy replication at the slot level<br>
+                        <strong>✓ Predictable Performance:</strong> Consistent routing overhead
+                    </p>
+                </div>
+            `;
+            
             modal.style.display = 'flex';
         }
 
+        // Toggle animation
         function toggleAnimation() {
             animationRunning = !animationRunning;
-            const button = document.querySelector('[onclick="toggleAnimation()"]');
             if (animationRunning) {
                 logMessage('info', 'Animations enabled');
-                button.innerHTML = '⏯️ Animation';
                 startMessageAnimation();
             } else {
                 logMessage('info', 'Animations disabled');
-                button.innerHTML = '▶️ Animation';
                 stopMessageAnimation();
             }
         }
 
+        // Log a message
         function logMessage(type, message) {
             const logContainer = document.getElementById('log-container');
             const timestamp = new Date().toLocaleTimeString();
+            
             const logEntry = document.createElement('div');
             logEntry.className = `log-entry ${type}`;
             logEntry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+            
             logContainer.insertBefore(logEntry, logContainer.firstChild);
-            while (logContainer.children.length > 100) { // Limit log entries
+            
+            while (logContainer.children.length > 50) {
                 logContainer.removeChild(logContainer.lastChild);
             }
         }
 
+        // Update metrics
         function updateMetrics() {
             document.getElementById('total-slots').textContent = TOTAL_SLOTS;
             document.getElementById('active-partitions').textContent = partitions.length;
-            document.getElementById('replication-factor').textContent = REPLICATION_FACTOR;
+            document.getElementById('replication-factor').textContent = '3';
             updateLoadMetrics();
         }
 
+        // Close modal
         function closeModal() {
             document.getElementById('infoModal').style.display = 'none';
         }
 
+        // Close modal when clicking outside
         window.onclick = function(event) {
             const modal = document.getElementById('infoModal');
             if (event.target === modal) {
@@ -1895,75 +1948,87 @@
             }
         }
 
+        // Speed Control Functions
         function setSimulationSpeed(value) {
             simulationIntervalDelay = parseInt(value);
             updateSpeedDisplay(value);
 
-            if (loadSimulationInterval) { // Restart simulation with new speed
+            if (loadSimulationInterval) {
                 clearInterval(loadSimulationInterval);
-                loadSimulationInterval = null; // Clear to allow restart
-                simulateLoad(); // This will re-initialize if it was running
+                simulateLoad();
             }
-            if (messageAnimationInterval) { // Restart message animation
-                stopMessageAnimation();
+            if (messageAnimationInterval) {
+                clearInterval(messageAnimationInterval);
                 startMessageAnimation();
-            }
-             if (autoPlayInterval) { // Restart step mode auto play
-                clearInterval(autoPlayInterval);
-                autoPlayInterval = null;
-                autoPlay();
             }
         }
 
-        function getSpeedFactor() { return 200 / Math.max(50, simulationIntervalDelay); }
+        function getSpeedFactor() {
+            return 200 / simulationIntervalDelay;
+        }
 
         function updateSpeedDisplay(value) {
             const referenceInterval = 200;
             const currentInterval = parseInt(value);
-            let speedFactor = referenceInterval / Math.max(50, currentInterval);
+            let speedFactor;
+
+            if (currentInterval === 0) {
+                speedFactor = Infinity;
+            } else {
+                speedFactor = referenceInterval / currentInterval;
+            }
             
             let displayText = speedFactor.toFixed(1) + 'x';
-            if (speedFactor >= 4) displayText = 'Max Speed (4.0x)';
-            else if (speedFactor <= 0.1) displayText = 'Min Speed (0.1x)';
+            if (speedFactor > 10) displayText = 'Max Speed';
+            if (speedFactor < 0.1) displayText = 'Min Speed';
 
             document.getElementById('speedValue').textContent = displayText;
         }
-        
-        function animateMessages() {
-            if (!animationRunning || loadSimulationInterval || stepMode) return; // Don't animate if load sim is on or in step mode
-            
-            const activeSlotsWithPrimary = slots.filter(s => s.primaryPartitionId !== null);
-            if (activeSlotsWithPrimary.length === 0) return;
 
-            const randomSlot = activeSlotsWithPrimary[Math.floor(Math.random() * activeSlotsWithPrimary.length)];
-            const slotId = randomSlot.id;
-            const primaryPartition = partitions.find(p => p.id === randomSlot.primaryPartitionId);
+        // Periodic message animation
+        function animateMessages() {
+            if (!animationRunning) return;
+            if (loadSimulationInterval) return;
             
-            const slotNodeElement = Array.from(document.querySelectorAll('#consistent-hash-ring .slot-node')).find(sn => sn.textContent === `S${slotId}`);
-            if (slotNodeElement) {
-                slotNodeElement.classList.add('highlighted');
-                setTimeout(() => slotNodeElement.classList.remove('highlighted'), 300 / getSpeedFactor());
-            }
-            
-            if (primaryPartition) {
-                const partitionNode = document.getElementById(`partition-${primaryPartition.id}`);
+            const slotsNodes = document.querySelectorAll('.slot-node.active');
+            if (slotsNodes.length > 0) {
+                const randomSlotNode = slotsNodes[Math.floor(Math.random() * slotsNodes.length)];
+                const slotId = parseInt(randomSlotNode.textContent.replace('S', ''));
+                const partitionId = slotToPartitionMap[slotId];
+                const partition = partitions.find(p => p.id === partitionId);
+                const partitionNode = partition ? document.getElementById(`partition-${partition.id}`) : null;
+
+                randomSlotNode.classList.add('highlighted');
+                setTimeout(() => {
+                    randomSlotNode.classList.remove('highlighted');
+                }, 300 / getSpeedFactor());
+                
                 if (partitionNode) {
                     partitionNode.classList.add('highlight-pulse');
-                    setTimeout(() => partitionNode.classList.remove('highlight-pulse'), 600 / getSpeedFactor());
+                    setTimeout(() => {
+                        partitionNode.classList.remove('highlight-pulse');
+                    }, 600 / getSpeedFactor());
                 }
-            }
 
-            const messageFlowIndicator = document.getElementById('message-flow-indicator');
-            if (messageFlowIndicator) {
-                messageFlowIndicator.style.transform = `translate(-50%, -50%) rotate(${randomSlot.angle}deg)`;
-                messageFlowIndicator.classList.add('active');
-                setTimeout(() => messageFlowIndicator.classList.remove('active'), 500 / getSpeedFactor());
+                const messageFlowIndicator = document.getElementById('message-flow-indicator');
+                if (messageFlowIndicator) {
+                    const slot = slots[slotId];
+                    messageFlowIndicator.style.transform = `translate(-50%, -50%) rotate(${slot.angle}deg)`;
+                    messageFlowIndicator.classList.add('active');
+                    setTimeout(() => {
+                        messageFlowIndicator.classList.remove('active');
+                    }, 500 / getSpeedFactor());
+                }
             }
         }
 
         function startMessageAnimation() {
-            if (messageAnimationInterval || !animationRunning) return;
-            messageAnimationInterval = setInterval(animateMessages, 2000 / getSpeedFactor());
+            if (messageAnimationInterval) {
+                clearInterval(messageAnimationInterval);
+            }
+            messageAnimationInterval = setInterval(() => {
+                animateMessages();
+            }, 2000 / getSpeedFactor());
         }
 
         function stopMessageAnimation() {
@@ -1973,12 +2038,15 @@
             }
         }
 
+        // Info Tooltip Functionality
         const infoTooltip = document.getElementById('infoTooltip');
         let tooltipTimeout;
+
         function showInfoTooltip(element, message, type = 'info', duration = 2500) {
-            if (!animationRunning && type !== 'error') return; // Show errors even if animations are off
+            if (!animationRunning) return;
 
             clearTimeout(tooltipTimeout);
+
             infoTooltip.textContent = message;
             infoTooltip.className = `info-tooltip show ${type}`;
             
@@ -1986,46 +2054,64 @@
             const controlsRect = element.closest('.controls').getBoundingClientRect();
 
             infoTooltip.style.left = `${rect.left - controlsRect.left + rect.width / 2}px`;
-            // Ensure bottom is calculated relative to the controls container if possible
-            infoTooltip.style.bottom = `${controlsRect.height - (rect.top - controlsRect.top) + 10}px`;
-
+            infoTooltip.style.bottom = `${controlsRect.bottom - rect.top + rect.height + 10}px`;
 
             infoTooltip.style.transition = 'none';
-            infoTooltip.style.transform = 'translate(-50%, 10px)'; // Start below
+            infoTooltip.style.transform = 'translate(-50%, 10px)';
             infoTooltip.style.opacity = '0';
             
-            void infoTooltip.offsetWidth; // Force reflow
+            void infoTooltip.offsetWidth;
 
             infoTooltip.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-            infoTooltip.style.transform = 'translate(-50%, 0)'; // Move to position
+            infoTooltip.style.transform = 'translate(-50%, 0)';
             infoTooltip.style.opacity = '1';
             
             tooltipTimeout = setTimeout(() => {
+                infoTooltip.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
                 infoTooltip.style.opacity = '0';
-                infoTooltip.style.transform = 'translate(-50%, -10px)'; // Move up and fade
+                infoTooltip.style.transform = 'translate(-50%, -10px)';
             }, duration / getSpeedFactor());
         }
 
+        // Tutorial Overlay Functionality
         function showTutorial() {
-            document.getElementById('tutorialOverlay').style.display = 'flex';
-        }
-        function hideTutorial() {
-            document.getElementById('tutorialOverlay').style.display = 'none';
-            try {
-                localStorage.setItem('streamflowTutorialShown', 'true');
-            } catch (e) { console.warn('localStorage not available for tutorial preference.'); }
+            const tutorialOverlay = document.getElementById('tutorialOverlay');
+            tutorialOverlay.style.display = 'flex';
         }
 
+        function hideTutorial() {
+            const tutorialOverlay = document.getElementById('tutorialOverlay');
+            tutorialOverlay.style.display = 'none';
+            
+            // Try to save tutorial state, but handle sandboxed environments
+            try {
+                localStorage.setItem('streamflowTutorialShown', 'true');
+            } catch (e) {
+                // Silently fail if localStorage is not available (sandboxed environment)
+                console.log('localStorage not available in sandboxed environment');
+            }
+        }
+
+        // Initialize system on load
         window.onload = function() {
             initializeSystem();
             startMessageAnimation();
             
+            // Check for tutorial with error handling for sandboxed environments
             try {
-                if (!localStorage.getItem('streamflowTutorialShown')) showTutorial();
-            } catch (e) { showTutorial(); /* Show if localStorage fails (e.g. sandboxed) */ }
+                if (!localStorage.getItem('streamflowTutorialShown')) {
+                    showTutorial();
+                }
+            } catch (e) {
+                // Show tutorial in sandboxed environments (can't remember preference)
+                showTutorial();
+            }
             
+            // Add enter key support for hash test
             document.getElementById('hashTestInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') testHash();
+                if (e.key === 'Enter') {
+                    testHash();
+                }
             });
         }
     </script>
