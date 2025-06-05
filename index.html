@@ -2086,7 +2086,12 @@
             tutorialOverlay.style.display = 'flex';
         }
 
-        function hideTutorial() {
+        function hideTutorial(event) {
+            // Prevent hiding if clicking the button (it will be handled by the button's onclick)
+            if (event && event.target && event.target.tagName === 'BUTTON') {
+                event.stopPropagation();
+            }
+            
             const tutorialOverlay = document.getElementById('tutorialOverlay');
             tutorialOverlay.style.display = 'none';
             
